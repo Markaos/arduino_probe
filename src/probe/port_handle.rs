@@ -97,6 +97,7 @@ impl<P: SerialPort> Handle<P> {
                         }
                         StopCapture => {
                             self.port.write("s".as_bytes()).expect("Issue with the serial port");
+                            // TODO: this is broken
                             let result = self.wait_for("\nReady\n");
                             data_tx.send(result).expect("Broken link");
                         }

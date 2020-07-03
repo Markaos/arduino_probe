@@ -21,6 +21,8 @@ fn pinmode_names() {
     assert_eq!(PinMode::Analog.as_char(), 'a');
 }
 
+// This test requires an Arduino Probe to be available on /dev/ttyACM0
+// Use `cargo test -- --ignored` to run it
 #[test]
 #[ignore]
 fn probe_handling() {
