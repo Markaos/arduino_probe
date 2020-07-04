@@ -25,5 +25,6 @@ fn main() {
 
     probe.start_capture();
     sleep(Duration::from_secs(5));
-    let _result = probe.stop_capture();
+    let result = probe.stop_capture();
+    println!("{}", result.len())
 }

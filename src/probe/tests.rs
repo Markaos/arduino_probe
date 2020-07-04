@@ -33,13 +33,20 @@ fn probe_handling() {
     pc.pin_mode(Pin::A2, PinMode::Digital);
     pc.pin_mode(Pin::A0, PinMode::Off);
 
+    println!("Trying to open /dev/ttyACM0");
     let probe = Probe::new("/dev/ttyACM0");
 
+    println!("Resetting the probe");
     probe.reset();
+    println!("Sending pin configuration");
     probe.configure_pins(pc);
+    println!("Checking pin configuration");
     assert_eq!(probe.dump_pins(), "0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 2 1 0 0 0");
 
+    println!("Capturing data");
     probe.start_capture();
     sleep(Duration::from_secs(5));
-    let _result = probe.stop_capture();
+    println!("Requesting captured data");
+    let result = probe.stop_capture();
+    println!("Done, got {} samples in 5 seconds ({} samples per second)", result.len(), result.len() / 5)
 }
