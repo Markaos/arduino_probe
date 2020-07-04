@@ -131,9 +131,13 @@ impl Probe {
         let capture = self.data_rx.recv().expect("Link broken");
         let lines: Vec<&str> = capture.split("\n").collect::<Vec<&str>>();
         lines.iter().map(|line| {
-            line.split(",").map(|column| {
-                u16::from_str_radix(column, 10).unwrap()
-            }).collect::<Vec<u16>>()
-        }).collect()
+            if line.len()> 0 {
+                line.split(",").map(|column| {
+                    u16::from_str_radix(column, 10).unwrap()
+                }).collect::<Vec<u16>>()
+            } else {
+                vec![65535u16]
+            }
+        }).filter(|row| row.len() > 1 || row[0] != 65535 ).collect()
     }
 }
