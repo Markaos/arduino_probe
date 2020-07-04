@@ -15,13 +15,7 @@ pub struct Handle<P: SerialPort> {
 }
 
 impl<P: SerialPort> Handle<P> {
-    pub fn new(port: P) -> Handle<P> {
-        Handle {
-            port,
-            buffer: String::new()
-        }
-    }
-
+    /// Spawn a Serial port monitoring thread and return the Handle
     pub fn spawn(path: &'static str, baud: BaudRate) -> (Sender<ProbeMessage>, Receiver<String>) {
         let (command_tx, command_rx) = channel();
         let (data_tx, data_rx) = channel();
@@ -42,17 +36,19 @@ impl<P: SerialPort> Handle<P> {
         (command_tx, data_rx)
     }
 
+    /// The actual structure initialization to be performed on the monitoring thread
+    fn new(port: P) -> Handle<P> {
+        Handle {
+            port,
+            buffer: String::new()
+        }
+    }
+
+    /// Read data from serial port until a given sequence is found and return String containing
+    /// everything until the first occurrence of the sequence
     fn wait_for(&mut self, what: &str) -> String {
-        let mut read_raw = [0u8; 4096];
         while !self.buffer.contains(what) {
-            match self.port.read(&mut read_raw) {
-                Ok(length) => {
-                    self.buffer.push_str(String::from_utf8_lossy(&read_raw[0..length]).to_string().as_str())
-                }
-                _ => {
-                    break;
-                }
-            }
+            self.read_quick();
         }
 
         match self.buffer.find(what) {
@@ -66,8 +62,24 @@ impl<P: SerialPort> Handle<P> {
         }
     }
 
+    /// Do a non-blocking read from the serial port into the buffer
+    fn read_quick(&mut self) {
+        let mut read_raw = [0u8; 4096];
+        match self.port.read(&mut read_raw) {
+            Ok(length) => {
+                // Yay
+                self.buffer.push_str(String::from_utf8_lossy(&read_raw[0..length]).to_string().as_str());
+            }
+            _ => {
+                // Nay
+            }
+        }
+    }
+
+    /// Monitoring thread main loop
     fn port_monitor(&mut self, command_rx: Receiver<ProbeMessage>, data_tx: Sender<String>) {
         loop {
+            self.read_quick();
             match command_rx.recv() {
                 Ok(message) => {
                     match message {
