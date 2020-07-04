@@ -53,8 +53,11 @@ impl<P: SerialPort> Handle<P> {
 
         match self.buffer.find(what) {
             Some(index) => {
-                self.buffer.split_off(index);
-                self.buffer.clone()
+                let mut buffer_end = self.buffer.split_off(index);
+                let result = self.buffer.clone();
+                buffer_end = buffer_end.split_off(what.len());
+                self.buffer = buffer_end;
+                result
             }
             _ => {
                 self.buffer.clone()
