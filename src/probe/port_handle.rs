@@ -83,7 +83,7 @@ impl<P: SerialPort> Handle<P> {
     fn port_monitor(&mut self, command_rx: Receiver<ProbeMessage>, data_tx: Sender<String>) {
         loop {
             self.read_quick();
-            match command_rx.recv() {
+            match command_rx.recv_timeout(Duration::from_millis(10)) {
                 Ok(message) => {
                     match message {
                         Reset => {
@@ -112,13 +112,12 @@ impl<P: SerialPort> Handle<P> {
                         }
                         StopCapture => {
                             self.port.write("s".as_bytes()).expect("Issue with the serial port");
-                            // TODO: this is broken
                             let result = self.wait_for("\nReady\n");
                             data_tx.send(result).expect("Broken link");
                         }
                     }
                 }
-                _ => break
+                _ => continue
             }
         }
     }
